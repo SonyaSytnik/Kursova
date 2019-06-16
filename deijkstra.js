@@ -1,137 +1,87 @@
 'use strict';
 
-class Dijkstra {
+const cout = road => {
+  console.log('Best fly: ' + road.join(' => '));
+};
 
+const catchWay = (history, to) => {
+  const way = [];
+  let i = to;
+
+  while (i !== undefined) {
+    way.push(i);
+    i = history[i];
+  }
+
+  way.reverse();
+  return way;
+};
+
+class Dijkstra {
   constructor(cities) {
     this.cities = cities;
   }
 
-  cout(road) {
+  shortWays1(...needWay) {
+    let from = needWay.shift();
+    let to;
+    let history;
+    const allWay = [];
+    let way;
 
-    let str = 'Best fly: ';
-    for (const i in road) {
-      if (i != road.length - 1) {
-        str = str + road[i] + ' => ';
+    while (needWay.length) {
+      to = needWay.shift();
+      history = this.shortWays2(from, to);
+      if (!history) return null;
+      way = catchWay(history, to);
+      if (needWay.length) {
+        allWay.push(...way.slice(0, -1));
       } else {
-        str += road[i];
+        return allWay.concat(way);
       }
-    }
-    console.log(str);
-    return;
-  }
-
-  road(from, to) {
-
-    if (arguments.length === 2) {
-      return this.shortWays1(this.cities, [from, to]);
-    } else {
-      return this.shortWays1(this.cities, [].slice.call(arguments));
-    }
-  }
-
-
-  catchKeys(obj) {
-    let keys = [], key;
-    for (key in obj) {
-      keys.push(key);
-    }
-    return keys;
-  }
-
-  catchWay(history, to) {
-    let way = [],
-      i = to;
-
-    while (i !== undefined) {
-      way.push(i);
-      i = history[i];
-    }
-
-    way.reverse();
-    return way;
-  }
-
-
-  shortWays1(cities, NeedWay) {
-    let from = NeedWay.shift(),
-      to,
-      history,
-      AllWay = [],
-      way;
-
-    while (NeedWay.length) {
-      to = NeedWay.shift();
-      history = this.shortWays2(cities, from, to);
-
-      if (history) {
-        way = this.catchWay(history, to);
-        if (NeedWay.length) {
-          AllWay.push.apply(AllWay, way.slice(0, -1));
-        } else {
-
-          return AllWay.concat(way);
-        }
-      } else {
-        return null;
-      }
-
       from = to;
     }
   }
 
-
-  shortWays2(cities, from, to) {
-
-    let costs = {},
-      NOW = { '0': [from] },
-      history = {},
-      keys;
+  shortWays2(from, to) {
+    const costs = {};
+    const now = { '0': [from] };
+    const history = {};
+    let keys;
 
     const addCity = function (cost, city) {
       const key = cost;
-      key.toString;
-
-      if (!NOW[key]) NOW[key] = [];
-      NOW[key].push(city);
-
+      if (!now[key]) now[key] = [];
+      now[key].push(city);
     };
 
     costs[from] = 0;
 
-    while (NOW) {
-      if (!(keys = this.catchKeys(NOW)).length) break;
+    while (true) {
+      keys = Object.keys(now);
+      if (!keys.length) break;
       keys.sort();
-      const key = keys[0],
-        bucket = NOW[key],
-        node = bucket.shift(),
-        nowCost = parseFloat(key),
-        adjacentNodes = cities[node];
-      if (!bucket.length) delete NOW[key];
-
+      const key = keys[0];
+      const bucket = now[key];
+      const node = bucket.shift();
+      const nowCost = parseFloat(key);
+      const adjacentNodes = this.cities[node];
+      if (!bucket.length) delete now[key];
       for (const city in adjacentNodes) {
-
-        const cost = adjacentNodes[city],
-          allCost = cost + nowCost,
-          cityCost = costs[city];
-
+        const cost = adjacentNodes[city];
+        const allCost = cost + nowCost;
+        const cityCost = costs[city];
         if ((cityCost === undefined) || (cityCost > allCost)) {
           costs[city] = allCost;
           addCity(allCost, city);
           history[city] = node;
         }
-
       }
     }
 
-    if (costs[to] === undefined) {
-      return null;
-    } else {
-
-      return history;
-    }
-
+    if (costs[to] === undefined) return null;
+    return history;
   }
-
 }
 
 const cities = {
@@ -140,11 +90,12 @@ const cities = {
   Miami: { SanFrancisco: 9, NewYork: 10, LosAngeles: 11, Texas: 2 },
   LosAngeles: { NewYork: 15, Miami: 11, California: 6 },
   California: { LosAngeles: 6, Texas: 9 },
-  Texas: { SanFrancisco: 14, Miami: 2, California: 9 }
-},
-  USA = new Dijkstra(cities);
-//console.log(USA.cities);
+  Texas: { SanFrancisco: 14, Miami: 2, California: 9 },
+};
 
-USA.cout(USA.road('SanFrancisco', 'California'));
-USA.cout(USA.road('SanFrancisco', 'LosAngeles', 'Texas'));
-USA.cout(USA.road('SanFrancisco', 'Texas')); 
+const usa = new Dijkstra(cities);
+//console.log(usa.cities);
+
+cout(usa.shortWays1('SanFrancisco', 'California'));
+cout(usa.shortWays1('SanFrancisco', 'LosAngeles', 'Texas'));
+cout(usa.shortWays1('SanFrancisco', 'Texas'));
